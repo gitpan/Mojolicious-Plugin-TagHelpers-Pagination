@@ -4,7 +4,7 @@ use Mojo::ByteStream 'b';
 use Scalar::Util 'blessed';
 use POSIX 'ceil';
 
-our $VERSION = 0.01;
+our $VERSION = 0.02;
 
 our @value_list =
   qw/prev
@@ -72,7 +72,7 @@ sub pagination {
   # $_[1] = page count
   # $_[2] = template or Mojo::URL
 
-  return '' unless $_[0] || $_[1];
+  return '' unless $_[1];
 
   # No valid count given
   local $_[1] = !$_[1] ? 1 : ceil($_[1]);
@@ -108,8 +108,7 @@ sub pagination {
     $t =~ s/\%7[bB]$ph\%7[dD]/{$ph}/g;
   };
 
-
-  my $sub = sublink_gen($t,$ps,$pe,$ph);
+  my $sub = sublink_gen($t,$ps,$pe,$ph) or return '';
 
   # Pagination string
   my $e;
@@ -218,6 +217,7 @@ sub pagination {
   $e;
 };
 
+
 # Sublink function generator
 sub sublink_gen {
   my ($url, $ps, $pe, $ph) = @_;
@@ -227,7 +227,7 @@ sub sublink_gen {
   # $_[1] = number_shown
 
   # Url is template
-  if ($url) {
+  if ($url && length($url) > 0) {
     $s .= 'my $url=' . b($url)->quote . ';';
     $s .= 'if($_[0]){$url=~s/\{' . $ph . '\}/$_[0]/g}else{$url=undef};';
   }

@@ -164,6 +164,13 @@ like($string,
      'String ellipsis');
 like($string, qr/<strong>4<\/strong>/, 'Current');
 
+is($c->pagination(0,0, ''), '', 'No page');
+is($c->pagination(0,1, ''), '<a rel="prev">***</a> <a href="1">1</a> <a href="1" rel="next">+++</a>', 'No current page');
+is($c->pagination(1,0, ''), '', 'No page');
+is($c->pagination(0,1), '<a rel="prev">***</a> <a href="1">1</a> <a href="1" rel="next">+++</a>', 'No current page');
+is($c->pagination(0,1, undef), '<a rel="prev">***</a> <a href="1">1</a> <a href="1" rel="next">+++</a>', 'No current page');
+
+
 
 done_testing;
 __END__
