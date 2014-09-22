@@ -4,7 +4,7 @@ use Mojo::ByteStream 'b';
 use Scalar::Util 'blessed';
 use POSIX 'ceil';
 
-our $VERSION = 0.03;
+our $VERSION = 0.04;
 
 our @value_list =
   qw/prev
@@ -229,7 +229,7 @@ sub sublink_gen {
 
   # Url is template
   if ($url && length($url) > 0) {
-    $s .= 'my $url=' . b($url)->quote . ';';
+    $s .= 'my $url=' . _quote($url) . ';';
     $s .= 'if($_[0]){$url=~s/\{' . $ph . '\}/$_[0]/g}else{$url=undef};';
   }
 
@@ -238,7 +238,7 @@ sub sublink_gen {
     $s .= 'my $url = $_[0];';
   };
 
-  $s .= q!my$n=$_[1]||! . b($ps)->quote . '.$_[0].' . b($pe)->quote . ';' .
+  $s .= q!my$n=$_[1]||! . _quote($ps) . '.$_[0].' . _quote($pe) . ';' .
         q{my $rel='';} .
 	q{if(ref $n){$rel=' rel="'.$n->[1].'"';$n=$n->[0]};} .
         q!if($url){$url=~s/&/&amp;/g;! .
@@ -258,6 +258,13 @@ sub sublink_gen {
   $x;
 };
 
+
+# Quote with a single quote
+sub _quote {
+  my $str = shift;
+  $str =~ s/(['\\])/\\$1/g;
+  return qq{'$str'};
+};
 
 1;
 

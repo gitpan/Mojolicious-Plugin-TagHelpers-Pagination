@@ -27,8 +27,6 @@ $app->plugin('TagHelpers::Pagination');
 # L<&lt;|#> L<1|#> ... L<5|#> B<6> L<7|#> ... L<18|#> L<&gt;|#>
 # <center><a href="#5" rel="prev">&lt;</a> <a href="#1">1</a> ... <a href="#5">5</a> <a rel="self">[6]</a> <a href="#7">7</a> ... <a href="#18">18</a> <a href="#7" rel="next">&gt;</a></center>
 
-
-
 my $string = $c->pagination( 4, 15, '#action={page}' => {
   prev => '&lt;',
   next => '&gt;',
@@ -164,13 +162,20 @@ like($string,
      'String ellipsis');
 like($string, qr/<strong>4<\/strong>/, 'Current');
 
+$app->plugin('TagHelpers::Pagination');
+
 is($c->pagination(0,0, ''), '', 'No page');
-is($c->pagination(0,1, ''), '<a rel="prev">***</a> <a href="1">1</a> <a href="1" rel="next">+++</a>', 'No current page');
+is($c->pagination(0,1, ''), '<a rel="prev">&lt;</a>&nbsp;<a href="1">1</a>&nbsp;<a href="1" rel="next">&gt;</a>', 'No current page');
 is($c->pagination(1,0, ''), '', 'No page');
-is($c->pagination(0,1), '<a rel="prev">***</a> <a href="1">1</a> <a href="1" rel="next">+++</a>', 'No current page');
-is($c->pagination(0,1, undef), '<a rel="prev">***</a> <a href="1">1</a> <a href="1" rel="next">+++</a>', 'No current page');
+is($c->pagination(0,1), '<a rel="prev">&lt;</a>&nbsp;<a href="1">1</a>&nbsp;<a href="1" rel="next">&gt;</a>', 'No current page');
+is($c->pagination(0,1, undef), '<a rel="prev">&lt;</a>&nbsp;<a href="1">1</a>&nbsp;<a href="1" rel="next">&gt;</a>', 'No current page');
 
 
+is($c->pagination(1, 178.92, '/?q={page}'), '<a rel="prev">&lt;</a>&nbsp;<a rel="self">[1]</a>&nbsp;<a href="/?q=2">2</a>&nbsp;<a href="/?q=3">3</a>&nbsp;...&nbsp;<a href="/?q=179">179</a>&nbsp;<a href="/?q=2" rel="next">&gt;</a>', 'Not a perfect number');
+
+is($c->pagination(1, 178.92, '/?q=$es&p={page}'), '<a rel="prev">&lt;</a>&nbsp;<a rel="self">[1]</a>&nbsp;<a href="/?q=$es&amp;p=2">2</a>&nbsp;<a href="/?q=$es&amp;p=3">3</a>&nbsp;...&nbsp;<a href="/?q=$es&amp;p=179">179</a>&nbsp;<a href="/?q=$es&amp;p=2" rel="next">&gt;</a>', 'Escaped 1');
+
+is($c->pagination(1, 178.92, q!/?q='$es'&p={page}!), '<a rel="prev">&lt;</a>&nbsp;<a rel="self">[1]</a>&nbsp;<a href="/?q=&#39;$es&#39;&amp;p=2">2</a>&nbsp;<a href="/?q=&#39;$es&#39;&amp;p=3">3</a>&nbsp;...&nbsp;<a href="/?q=&#39;$es&#39;&amp;p=179">179</a>&nbsp;<a href="/?q=&#39;$es&#39;&amp;p=2" rel="next">&gt;</a>', 'Escaped 2');
 
 done_testing;
 __END__

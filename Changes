@@ -1,3 +1,6 @@
+0.04 2014-09-22
+        - Fixed critical escaping bug in URLs.
+
 0.03 2014-09-22
         - Improved documentation.
 	- Log errors properly.
