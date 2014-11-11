@@ -4,7 +4,7 @@ use Mojo::ByteStream 'b';
 use Scalar::Util 'blessed';
 use POSIX 'ceil';
 
-our $VERSION = 0.04;
+our $VERSION = 0.05;
 
 our @value_list =
   qw/prev
@@ -69,7 +69,7 @@ sub pagination {
   my $c = shift;
 
   # $_[0] = current page
-  # $_[1] = page count
+  # $_[1] = page count or -1
   # $_[2] = template or Mojo::URL
 
   return '' unless $_[1];
@@ -114,7 +114,11 @@ sub pagination {
   my $e;
   my $counter = 1;
 
-  if ($_[1] >= 7){
+  # More than seven pages
+  if ($_[1] >= 7 ||
+
+	# Or the number of pages is unknown
+	($_[1] == -1 && $_[0] > 4)){
 
     # < [1] #2 #3
     if ($_[0] == 1){
@@ -148,7 +152,7 @@ sub pagination {
     };
 
     # #x-1 [x] #x+1
-    if (($_[0] >= 3) && ($_[0] <= ($_[1] - 2))){
+    if (($_[0] >= 3) && ($_[0] <= ($_[1] - 2))) {
       $e .= $sub->($_[0] - 1) . $s .
 	    $sub->(undef, [$cs .$_[0] . $ce, 'self']) . $s .
 	    $sub->($_[0] + 1) . $s;
@@ -163,19 +167,27 @@ sub pagination {
     if ($_[0] == ($_[1] - 1)){
       $e .= $sub->($_[1] - 2) . $s .
 	    $sub->(undef, [$cs . $_[0] . $ce, 'self']) . $s;
-    };
+    }
 
     # Number is final
-    if ($_[0] == $_[1]){
-      $e .= $sub->($_[1] - 1) . $s .
-            $sub->(undef, [$cs . $_[1] . $ce, 'self']) . $s .
+    elsif ($_[0] == $_[1]) {
+      $e .= $sub->($_[0] - 1) . $s .
+            $sub->(undef, [$cs . $_[0] . $ce, 'self']) . $s .
 	    $sub->(undef, [$n, 'next']);
+    }
+
+    # Number is unknown
+    elsif ($_[1] == -1) {
+      $e .= $sub->($_[0] - 1) . $s .
+            $sub->(undef, [$cs . $_[0] . $ce, 'self']) . $s .
+	    $el . $s .
+	    $sub->($_[0] + 1, [$n, 'next']);
     }
 
     # Number is anywhere in between
     else {
-      $e .= $sub->($_[1]) . $s .
-            $sub->(($_[0] + 1), [$n,'next']);
+	$e .= $sub->($_[1]) . $s .
+	      $sub->(($_[0] + 1), [$n,'next']);
     };
   }
 
@@ -190,7 +202,7 @@ sub pagination {
     };
 
     # All numbers in between
-    while ($counter <= $_[1]){
+    while ($counter <= $_[1] || ($_[1] == -1 && $counter <= $_[0])){
       if ($_[0] != $counter) {
         $e .= $sub->($counter) . $s;
       }
@@ -202,6 +214,9 @@ sub pagination {
 
       $counter++;
     };
+
+    # Ellipsis in case the number is not known
+    $e .= $el . $s if $_[1] == -1;
 
     # Next
     if ($_[0] != $_[1]){
@@ -358,7 +373,8 @@ The link pattern can be a string using a placeholder in curly brackets
 It's also possible to give a
 L<Mojo::URL> object containing the placeholder.
 The placeholder can be used multiple times.
-
+In case the total count of pages is unknown, a C<-1> can be passed
+and the final page is ommited for pagination.
 
 =head1 PARAMETERS
 
